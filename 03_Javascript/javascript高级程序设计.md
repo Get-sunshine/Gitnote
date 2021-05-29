@@ -1270,10 +1270,10 @@ function sum(num1,num2){
 ```js
 var sum = function(num1,num2){
     return num1+num2
-}
+};
 ```
 
-**不推荐**使用Function构造函数定义函数。
+**不推荐**使用Function构造函数定义函数。Function构造函数:接受任意数量的参数，最后一个参数被看作函数体，其余参数均是新函数的参数。
 
 ![1604998237029](E:\前端\GitNote\Gitnote\03_Javascript\图片笔记\1604998237029.png)
 
@@ -1373,11 +1373,11 @@ function factorial(num){
 }
 ```
 
-**this:**引用函数据以执行的环境对象----或者说是this值。 谁调用函数，this就指向谁。。？
+**this:**引用函数据以执行的环境对象----或者说是this值。 （在网页的全局作用域中调用函数时，this对象引用的是window）谁调用函数，this就指向谁。。？
 
 ![1605000151320](E:\前端\GitNote\Gitnote\03_Javascript\图片笔记\1605000151320.png)
 
-ES5规范化了另一个函数对象**内部属性：caller**。此属性保存**调用当前函数的函数的引用**，若在全局作用域中调用当前函数，则它的值为null。
+ES5规范化了另一个函数对象的**内部属性：caller**。此属性保存着**调用当前函数的函数的引用**，若在全局作用域中调用当前函数，则它的值为null。
 
 ```js
 function outer(){
@@ -1405,13 +1405,13 @@ console.log(outer())
 
 严格模式，访问callee会报错。
 
-#### 5.5.5函数属性和方法
+#### 5.5.5 函数属性和方法（length和prototype）
 
-在ES中，函数是对象，具有属性和方法。函数有两个属性：length和prototype。
+在ES中，函数是**对象**，具有**属性和方法**。函数有两个属性：**length**和**prototype**。
 
-length：函数命名参数的个数。
+**length**：函数命名参数的个数。
 
-prototype：对ES中的引用对象而言，prototype是保存它们所有实例方法的真正所在，在ES5中，prototype属性是不可枚举的。
+**prototype**：对ES中的引用对象而言，prototype是保存它们所有实例方法的真正所在，在ES5中，prototype属性是不可枚举的。
 
 函数包含两个非继承的方法：call()和apply()。作用：在特定作用域中调用函数，即设置函数体内this对象的值。
 
@@ -1422,13 +1422,15 @@ function sum(num1,num2){
     return num1+num2
 }
 function applySum1(num1,num2){
-    return sum.apply(this,arguments)
+    return sum.apply(this,arguments) // arguments
 }
 function applySum2(num1,num2){
-    return sum.apply(this,[num1,num2])
+    return sum.apply(this,[num1,num2]) // 参数数组Array实例
 }
 console.log(applySum1(1,2),applySum2(2,3)) //3 5  这些代码里的this都是window
 ```
+
+严格模式下，未指定环境对象而调用函数，this值不会指向window。除非明确的将函数添加到某个对象或者调用apply()或者call()，否则this值将是undefined。
 
 call():接受1个及以上参数。第一个参数：运行该函数的作用域。其余参数，用逗号分隔。
 
@@ -1445,7 +1447,7 @@ console.log(callSum(2,3)) //3 5
 call()和apply()真正的用武之地：扩充函数赖以运行的作用域。
 
 ```js
-color='red'
+var color='red'
 var o={
     color:'blue'
 }
@@ -1458,7 +1460,9 @@ sayColor.call(window) // 'red'
 sayColor.call(o) // "blue"
 ```
 
-ES5中的方法：bind()。该方法创建函数的实例，实例的this值绑定到传给给bind()函数的参数。
+使用call或者apply方法的最大好处就是让对象与方法没有任何的耦合关系。
+
+ES5新定义的方法：bind()。该方法创建并返回一个函数的实例，实例的this值绑定到传给bind()函数的第一个参数 ，而其余参数将作为新函数的参数，供调用时使用 。
 
 ```js
 var color = 'red'
@@ -1479,6 +1483,53 @@ toLocaleString(),返回函数的代码。
 toString()，返回函数的代码。
 
 valueOf(),返回函数的代码。
+
+### 5.6 基本包装类型
+
+ECMAScript提供了3个特殊的引用类型：Boolean、Number、String，目的是便于操作基本类型值。
+
+#### 5.6.1 Boolean类型
+
+Boolean类型是与布尔值对应的引用类型。
+
+创建Boolean对象的方法：调用Boolean构造函数并传入true或false。
+
+```js
+var booleanObject = new Boolean(true)
+```
+
+Boolean类型的实例重写了valueOf()方法，返回基本类型值true或false；重写了toString()方法，返回字符串“true”或“false”。但是，Boolean对象在ECMAScript中的用处不大，因为经常造成人们的误解。
+
+在布尔表达式中使用Boolean对象：
+
+```js
+var falseObject = new Boolean(false)
+var result = falseObject&&true
+console.log(result) // true
+// 创建了一个Boolean对象，然后，将Boolean对象用于逻辑与表达式中。在布尔表达式中的所有对象都会被转换为true，因此result的结果是true。
+var falseValue = false
+result = falseValue && true
+console.log(result) // false
+```
+
+基本类型和引用类型的布尔值还有其他区别。
+
+typeof操作符对基本类型返回“boolean”,对引用类型返回“object”。
+
+Boolean对象是Boolean类型的实例，使用instanceof操作符测试Boolean对象会返回true，使用instanceof操作符测试基本类型的布尔值会返回false。
+
+```js
+console.log(typeof falseObject) // object
+console.log(typeof falseValue) // boolean
+console.log(falseObject instanceOf Boolean) // true
+console.log(falseValue instanceOf Boolean) // false
+```
+
+建议永远不要使用Boolean对象。
+
+#### 5.6.2 Number类型
+
+
 
 ## 6.第6章 面向对象的程序设计
 

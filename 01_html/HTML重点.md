@@ -31,7 +31,7 @@ HTML标签不区分大小写。从一致性、可读性等各方面来说，最�
 
 ## 3.meta标签
 
-许多<meta>元素包含了name和content特性：
+许多元素包含了`<meta>`name和content特性：
 
 name指定meta元素的类型：说明该元素包含什么类型的信息。
 
