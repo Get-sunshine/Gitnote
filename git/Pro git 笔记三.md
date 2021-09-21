@@ -324,5 +324,42 @@ Git使用简单的三方合并，所以反复将一个分支合并入另一个�
 
 看一个例子。假设从网络上clone一个仓库，Git的clone命令会自动将该远程仓库命名为origin，并拉取它的所有数据，创建一个指向它master分支的指针，在本地将该指针命名为origin/master。同时，Git会给予一个与origin的master分支指向同一个地方的本地master分支，这样我们就会有工作基础了。
 
+注意：master是运行git  init时默认的起始分支名字，原因仅仅是它的广泛使用。origin是运行git clone时默认的远程仓库名字。例如运行git clone -o booyah，则默认远程分支名为booyah/master。
 
+![1632216527815](E:\前端\GitNote\Gitnote\git\图片笔记\1632216527815.png)
+
+若本地master分支做了一些工作，同一时间，其他人推动提交到git.ourcompany.com，并更新了它的master分支，则你的提交历史将向不同的方向推进。当你不与origin服务器连接时，你的origin/master分支指针就不会移动。
+
+![1632216873811](E:\前端\GitNote\Gitnote\git\图片笔记\1632216873811.png)
+
+如果需要同步工作，运行git fetch origin命令。该命令查找origin是哪个服务器，从中抓取本地没有的数据，并且更新本地数据库，移动origin/master指针指向新的、更新后的位置。
+
+![1632217127605](E:\前端\GitNote\Gitnote\git\图片笔记\1632217127605.png)
+
+演示多个远程仓库与远程分支的情况。假设有另一个内部Git服务器，该服务器位于git.team1.ourcompany.com。可以运行git remote add 添加一个新的远程仓库引用到当前的项目。将该仓库命名为teamone，作为整个URL的缩写。
+
+![1632217570286](E:\前端\GitNote\Gitnote\git\图片笔记\1632217570286.png)
+
+现在，可以运行git fetch teamone抓取远程仓库teamone有而本地没有的数据。但是，那台服务器上现有的数据是origin服务器上的一个子集，所以Git并不会抓取数据而是设置远程跟踪分支teamone/master指向teamone的master分支。
+
+![1632217882501](E:\前端\GitNote\Gitnote\git\图片笔记\1632217882501.png)
+
+#### 推送
+
+公开分享一个分支，即将其推送到有写入权限的远程仓库上。本地分支并不会自动与远程仓库同步，必须显示地推送想要分享的分支。可以把不愿意分享的内容放到私人分支上，将需要协作的内容推送到公开分支上。
+
+例如共同在serverfix 分支上工作。可以运行 git push (remote) (branch) 命令推送分支。
+
+```
+$ git push origin serverfix
+Counting objects: 24, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (15/15), done.
+Writing objects: 100% (24/24), 1.91 KiB | 0 bytes/s, done.
+Total 24 (delta 2), reused 0 (delta 0)
+To https://github.com/schacon/simplegit
+ * [new branch]      serverfix -> serverfix
+```
+
+这里的工作被简化了。 Git自动将serverfix分支名字展开为 refs/heads/serverfix:refs/heads/serverfix 。即，推送本地的serverfix分支来更新远程仓库上的serverfix分支。  可以运行git push origin serverfix命令得到同样的效果。即也是推送本地的serverfix 分支，作为远程仓库的serverfix分支。 可以通过这种方式 将本地分支推送到一个命名不相同的远程分支。也可以更改远程分支名， 即 git push origin serverfix:awesomebranch 将本地的serverfix分支推送到远程的 awesomebranch 分支。
 
