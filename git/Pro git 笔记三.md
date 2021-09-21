@@ -210,3 +210,119 @@ index.html |    1 +
 
 #### 遇到冲突时的分支合并
 
+冲突：在不同分支中对同一文件中同一部分进行不同的修改。假设上述分支：iss53，hotfix分别对同一文件同一部分做出了不同的修改。在git进行合并时，就会产生冲突。
+
+```
+$ git merge iss53
+Auto-merging index.html
+CONFLICT (content): Merge conflict in index.html
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+此刻，Git做了合并，但是没有自动创建一个新的合并提交。Git将会等待我们解决合并时产生的冲突。在冲突产生后，可以使用git status 查看包含冲突而处于未合并（unmerged）状态的文件。
+
+```
+$ git status
+On branch master
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+
+    both modified:      index.html
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+包含合并冲突而有待解决的文件，都会以未合并状态标识出来。Git会在有冲突的文件中加入标准的冲突解决标记，然后可以打开文件手动解决冲突。出现冲突的文件会包含一些特殊字段。例如：
+
+```
+<<<<<<< HEAD:index.html
+<div id="footer">contact : email.support@github.com</div>
+=======
+<div id="footer">
+ please contact us at support@github.com
+</div>
+>>>>>>> iss53:index.html
+```
+
+此时显示的内容分为上下两部分。等号上半部分，即HEAD所指部分，是为当前分支中的内容；等号下半部分是为iss53分支内容。为了解决冲突，可以选择一个任意一个部分的内容，或者自行合并两个部分的内容。例如：
+
+```
+<div id="footer">
+please contact us at email.support@github.com
+</div>
+```
+
+解决所有冲突后，使用git add 将文件标记为冲突已解决。即一旦暂存这些原本有冲突的文件，Git就会将它们标记为冲突已解决。
+
+### 分支管理
+
+不带参数的git branch。得到当前所有分支列表。
+
+```
+$ git branch
+  iss53
+* master
+  testing
+```
+
+分支前的*字符，代表现在检出的分支。（现在所在的分支）如果需要查看每个分支的最后一次提交，可以使用git branch -v。
+
+```
+$ git branch -v
+  iss53   93b412c fix javascript issue
+* master  7a98805 Merge branch 'iss53'
+  testing 782fd34 add scott to the author list in the readmes
+```
+
+查看已经合并到当前分支的分支。git branch --merged。
+
+```
+$ git branch --merged
+  iss53
+* master
+```
+
+查看未合并到当前分支的分支列表。git branch --no-merged。
+
+```
+$ git branch --no-merged
+  testing
+```
+
+这个列表中的分支使用git branch -d删除时，会提示未merged，即删除失败。可以使用git branch -D强制删除。
+
+### 分支开发工作流
+
+#### 长期分支
+
+Git使用简单的三方合并，所以反复将一个分支合并入另一个分支就不是一件难事。许多使用Git的开发者都喜欢使用这种方式来工作。比如只在master分支上保留完全稳定的代码。在develop或者next的平行分支上做后续开发或测试稳定性。当它们达到稳定状态时，就合并入master分支。
+
+因此，稳定分支的指针总是在提交历史中落后一大截，前沿分支的指针往往比较靠前。
+
+![1631351102471](E:\前端\GitNote\Gitnote\git\图片笔记\1631351102471.png)
+
+将其想象成流水线。
+
+![1631351458796](E:\前端\GitNote\Gitnote\git\图片笔记\1631351458796.png)
+
+在一个非常庞大且复杂的项目中工作时，使用长期分支的方法通常很有帮助。
+
+#### 特性分支
+
+任何规模的项目都适合特性分支。特性分支是一种短期分支，用来实现单一特性或相关工作。
+
+### 远程分支
+
+远程引用是对远程仓库的引用（指针），包括分支、标签等等。可以通过git ls-remote(remote)显式获得远程引用的完整列表，或者通过git remote show(remote) 获得远程分支的更多信息。然而， 一个更常见的做法是利用远程跟踪分支。
+
+远程跟踪分支是远程分支状态的引用。它们是你不能移动的本地引用，当你做任何网络通信操作时，它们会自动移动。远程跟踪分支像是你上次连接到远程仓库时，那些分支所处状态的书签。
+
+它们以(remote)/(branch)形式命名。例如，你想要查看你最后一次与远程仓库origin通信时master分支的状态，你可以查看origin/master分支。 你与同事合作解决了一个问题，且他们推送一个iss53分支，你可能有自己的本地iss53分支，但是服务器上的分支会指向origin/iss53的提交。
+
+看一个例子。假设从网络上clone一个仓库，Git的clone命令会自动将该远程仓库命名为origin，并拉取它的所有数据，创建一个指向它master分支的指针，在本地将该指针命名为origin/master。同时，Git会给予一个与origin的master分支指向同一个地方的本地master分支，这样我们就会有工作基础了。
+
+
+
