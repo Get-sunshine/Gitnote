@@ -326,7 +326,7 @@ Git使用简单的三方合并，所以反复将一个分支合并入另一个�
 
 注意：master是运行git  init时默认的起始分支名字，原因仅仅是它的广泛使用。origin是运行git clone时默认的远程仓库名字。例如运行git clone -o booyah，则默认远程分支名为booyah/master。
 
-![1632216527815](E:\前端\GitNote\Gitnote\git\图片笔记\1632216527815.png)
+![1632556171654](E:\前端\GitNote\Gitnote\git\图片笔记\1632556171654.png)
 
 若本地master分支做了一些工作，同一时间，其他人推动提交到git.ourcompany.com，并更新了它的master分支，则你的提交历史将向不同的方向推进。当你不与origin服务器连接时，你的origin/master分支指针就不会移动。
 
