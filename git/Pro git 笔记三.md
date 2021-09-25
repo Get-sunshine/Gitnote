@@ -328,21 +328,21 @@ Git使用简单的三方合并，所以反复将一个分支合并入另一个�
 
 ![1632556171654](E:\前端\GitNote\Gitnote\git\图片笔记\1632556171654.png)
 
-若本地master分支做了一些工作，同一时间，其他人推动提交到git.ourcompany.com，并更新了它的master分支，则你的提交历史将向不同的方向推进。当你不与origin服务器连接时，你的origin/master分支指针就不会移动。
+若本地master分支做了一些工作，同一时间，其他人推送提交到git.ourcompany.com，并更新了它的master分支，则你的提交历史将向不同的方向推进。当你不与origin服务器连接时，你的origin/master分支指针就不会移动。
 
-![1632216873811](E:\前端\GitNote\Gitnote\git\图片笔记\1632216873811.png)
+![1632557339665](E:\前端\GitNote\Gitnote\git\图片笔记\1632557339665.png)
 
 如果需要同步工作，运行git fetch origin命令。该命令查找origin是哪个服务器，从中抓取本地没有的数据，并且更新本地数据库，移动origin/master指针指向新的、更新后的位置。
 
-![1632217127605](E:\前端\GitNote\Gitnote\git\图片笔记\1632217127605.png)
+![1632557414063](E:\前端\GitNote\Gitnote\git\图片笔记\1632557414063.png)
 
 演示多个远程仓库与远程分支的情况。假设有另一个内部Git服务器，该服务器位于git.team1.ourcompany.com。可以运行git remote add 添加一个新的远程仓库引用到当前的项目。将该仓库命名为teamone，作为整个URL的缩写。
 
-![1632217570286](E:\前端\GitNote\Gitnote\git\图片笔记\1632217570286.png)
+![1632557558413](E:\前端\GitNote\Gitnote\git\图片笔记\1632557558413.png)
 
 现在，可以运行git fetch teamone抓取远程仓库teamone有而本地没有的数据。但是，那台服务器上现有的数据是origin服务器上的一个子集，所以Git并不会抓取数据而是设置远程跟踪分支teamone/master指向teamone的master分支。
 
-![1632217882501](E:\前端\GitNote\Gitnote\git\图片笔记\1632217882501.png)
+![1632557623869](E:\前端\GitNote\Gitnote\git\图片笔记\1632557623869.png)
 
 #### 推送
 
@@ -362,4 +362,42 @@ To https://github.com/schacon/simplegit
 ```
 
 这里的工作被简化了。 Git自动将serverfix分支名字展开为 refs/heads/serverfix:refs/heads/serverfix 。即，推送本地的serverfix分支来更新远程仓库上的serverfix分支。  可以运行git push origin serverfix命令得到同样的效果。即也是推送本地的serverfix 分支，作为远程仓库的serverfix分支。 可以通过这种方式 将本地分支推送到一个命名不相同的远程分支。也可以更改远程分支名， 即 git push origin serverfix:awesomebranch 将本地的serverfix分支推送到远程的 awesomebranch 分支。
+
+下一次其他协作者从服务器上抓取数据时，会在本地生成一个远程跟踪分支origin/serverfix，指向服务器的serverfix分支的引用。
+
+```
+$ git fetch origin
+remote: Counting objects: 7, done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 0), reused 3 (delta 0)
+Unpacking objects: 100% (3/3), done.
+From https://github.com/schacon/simplegit
+ * [new branch]      serverfix    -> origin/serverfix
+```
+
+注意：抓取到的新的远程跟踪分支时，本地不会自动生成一份可编辑的副本（拷贝）。即在这种情况下，不会有一个新的serverfix分支，只有一个不可以修改的origin/serverfix指针。
+
+可以运行 git merge origin/serverfix 将这些工作合并到当前所在的分支。如果想要在自己的serverfix分支工作，可以将该分支建立在远程跟踪分支上。
+
+```
+$ git checkout -b serverfix origin/serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+Switched to a new branch 'serverfix'
+```
+
+这样后，就创建了一个用于工作的本地分支，并且起点位于origin/serverfix。
+
+#### 跟踪分支
+
+从一个远程跟踪分支检出一个本地分支会自动创建一个跟踪分支（或者称为上游分支）。跟踪分支是与远程分支有直接关系的本地分支。若在跟踪分支上使用git pull命令，Git能自动识别去哪个服务器抓取、合并到哪个分支。
+
+克隆一个仓库时，通常自动创建一个跟踪origin/master的master分支。可以自己设置其他的跟踪分支-其他远程仓库上的跟踪分支，或者不跟踪master分支。可以运行git checkout -b [branch] [remotename]/[branch]来设置跟踪分支。
+
+Git提供了快捷方式。
+
+```
+$ git checkout --track origin/serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+Switched to a new branch 'serverfix'
+```
 
