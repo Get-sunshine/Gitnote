@@ -880,3 +880,249 @@ setup(){
 此处，渲染上下文中暴露了 root，通过 ref='root' ，将其绑定到 div 作为其 ref。虚拟 DOM 补丁算法中，如果 VNode 的 ref 键对应渲染上下文中的 ref 。（渲染上下文是什么东西呢？）则 VNode 的相应元素或组件实例将被分配给该 ref 的值。这是在虚拟 DOM 挂载/打补丁过程中执行的，因此模板引用只会在初始渲染后获得赋值。
 
 作为模板引用的 ref 的行为与其他 ref 一样，是响应式的，可以传递到（或从中返回）复合函数中。
+
+##### 1.  JSX 中的用法
+
+```javascript
+export default {
+  setup(){
+    const root = ref(null)
+    return ()=>{
+      h('div',{ // with 渲染函数
+        ref:root
+      })
+      
+      // with JSX
+      return ()=> <div ref={root}/>
+    }
+  }
+}
+```
+
+##### 2. v-for 中的用法
+
+##### 组合式 API 模板引用在 v-for 内部使用时没有特殊处理。相反，请使用函数引用执行自定义处理。（啥意思哇？）
+
+```vue
+<template>
+	<div v-for="(item,i) in list" :ref="el=>{if(el) divs[i]=el}">
+    {{item}}
+  </div>
+</template>
+<script>
+  import {ref,reactive,onBeforeUpdate} from 'vue'
+	export default{
+    setup(){
+      const list = reactive([1,2,3])
+      const divs = ref([])
+      
+      // 确保在每次更新之前重置ref
+      onBefroeUpdate(()=>{
+        divs.value=[]
+      })
+      return {
+          list,
+          divs
+ 			}
+    }
+  }
+</script>
+```
+
+##### 3. 侦听模板引用
+
+侦听模板引用的变更可以替代前面例子中演示使用的生命周期钩子。
+
+但是有一个区别，wath() 和 watchEffect() 在 DOM 挂载或更新之前运行副作用，所以当侦听器运行时，模板引用还未被更新。
+
+```vue
+<template>
+	<div ref='root'>
+    This is a root element
+  </div>
+</template>
+<script>
+  import {ref,watchEffect} from 'vue'
+	export default {
+    setup(){
+      const root = ref(null)
+      watchEffect(()=>{ // 这个副作用在 DOM 更新之前运行，因此，模板引用还没有持有对元素的引用。
+        console.log(root.value) // null
+      })
+      return {
+        root
+      }
+    }
+  }
+</script>
+```
+
+侦听器应使用 flush:'post' 选项定义，这会在 DOM 更新后运行副作用，确保模板引用与 DOM 保持一致，并引用正确的元素。
+
+```javascript
+watchEffect(()=>{
+  console.log(root.value) // <div> This is a root element </div>
+},{
+  flush:'post'
+} )
+```
+
+#### 4.1.6 Mixin
+
+##### 	1. 基础
+
+Mixin : 一种灵活的方式，用来分发 Vue 组件中的可复用功能。mixin 对象可包含任意组件选项。
+
+组件使用 mixin 对象时，所有该对象的选项将被混合进该组件本身的选项。
+
+```javascript
+// 定义 mixin 
+const myMixin = {
+  created(){
+    this.hello()
+  }
+  methods:{
+  	hello(){
+      console.log('hello from mixin')
+    }
+	}
+}
+
+// 定义一个使用此 mixin 对象的应用
+const app = Vue.createApp({
+  mixins:[myMixin]
+})
+app.mount('#mixins-basic') // 'hello from mixin'
+```
+
+##### 2. 选项合并
+
+组件和 mixin 对象有同名选项时，会以恰当的方式进行合并。
+
+当 property 名冲突时，会以组件自身的数据优先。
+
+```javascript
+const myMixin = {
+  data(){
+    return {
+      message:'mixin',
+      foo:'abc'
+    }
+  }
+}
+const app = Vue.createApp({
+  mixin:[myMixin],
+  data(){
+    return {
+      message:'component',
+      bar:'def'
+    }
+  },
+  created(){
+    console.log(this.$data) // {message:'component',foo:'abc',bar:'def'}
+  }
+})
+```
+
+同名钩子函数合并为一个数组，因此都将调用。此外，mixin 对象的钩子会在组件钩子调用之前调用。
+
+```javascript
+const myMixin = {
+  created(){
+    console.log('mixin created')
+  }
+}
+
+const app = Vue.createApp({
+  mixins:[myMixin],
+  created(){
+    console.log('com created')
+  }
+})
+// mixin created
+// com created
+```
+
+值为对象的选项（例如：methods/components/directives）,被合并为同一个对象。键名冲突时，组件对象键值对优先。
+
+```javascript
+const myMixin = {
+  methods:{
+    foo(){
+      console.log('foo')
+    }
+    conflicting(){
+  		console.log('from mixin')
+		}
+  }
+}
+const app = Vue.createApp({
+  mixins:[myMixin],
+  methods:{
+    bar(){
+      console.log('bar')
+    }
+    conflicting(){
+  		console.log('from self')
+		}
+  }
+})
+const vm = app.mout('#mixins-basic')
+vm.foo() // foo
+vm.bar() // bar
+vm.conflicting() // from self
+```
+
+##### 3. 全局 Mixin
+
+可以为 Vue 应用程序全局应用 mixin:
+
+```javascript
+const app = Vue.createApp({
+  myOption:'hello'
+})
+// 为自定义的选项 myOption 注入一个处理器
+app.mixin({
+  created(){
+    const myOption = this.$options.myOption
+    if(myOption){
+      console.log(myOption)
+    }
+  }
+})
+app.mount('#mixins-global') // hello
+```
+
+Mixin 可以进行全局注册。一旦使用全局 mixin,它将影响每一个之后创建的组件。
+
+```javascript
+const app = Vue.createApp({
+  myOption:'hello'
+})
+app.mixin({
+  created(){
+    const myOption = this.$options.myOption
+    if(myOption){
+      console.log(myOption)
+    }
+  }
+})
+// 将 myOption 也添加到子组件
+app.component('test-component',{
+  myOption:'hello from component'
+})
+app.mount('#mixins-global')
+// hello
+// hello from component
+```
+
+大多数情况下，只应当应用于自定义选项，就像上面的示例一样。推荐将其作为插件发布。
+
+##### 4. 自定义选项合并策略 TODO
+
+##### 5. 合并 TODO
+
+#### 4.1.7 自定义指令
+
+##### 1. 简介
+

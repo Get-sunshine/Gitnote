@@ -4,32 +4,30 @@ Git的分支模型，是git的‘必杀技特性’。
 
 ### 分支简介
 
-先回顾一下Git是如何保存数据的。
+Git保存不同时刻的文件快照，不是文件的变化或差异。
 
-Git保存的是一系列不同时刻的文件快照，而不是文件的变化或者差异。
+commit 时，Git 保存提交对象（commit object）。该对象保存了作者的姓名、邮箱、提交时输入的信息以及指向它的父对象的指针。首个提交对象没有父对象，普通提交对象有父对象，由多个分支合并产生的提交对象有多个父对象。
 
-提交操作时，Git会保存一个提交对象（commit object）。该提交对象保存了作者的姓名、邮箱、提交时输入的信息以及指向它的父对象的指针。首个提交对象没有父对象，普通提交对象有父对象，由多个分支合并产生的提交对象有多个父对象。
+例子：
 
-使用一个例子来说明：
-
-假设有一个工作目录，包含三个将要被暂存和提交的文件。暂存操作为每个文件计算校验和（SHA-1 哈希算法），然后把当前版本的文件快照保存到Git仓库中（Git使用blob对象保存快照），最终将校验和加入到暂存区等待提交：
+工作目录中包含三个将要被暂存和提交的文件。暂存时为每个文件计算校验和（SHA-1 哈希算法），然后把当前版本的文件快照保存到Git 仓库中（ Git 使用 blob 对象保存快照），最终将校验和加入到暂存区等待提交：
 
 ```
 $ git add README test.rb LICENSE
 $ git commit -m 'The initial commit of my project'
 ```
 
-git commit提交时，Git先计算每个子目录的校验和，然后在Git仓库中这些校验和保存为树对象。之后，Git创建一个提交对象，该对象包含前面所述信息，还包含指向这个树对象的指针。然后，Git就可以在需要时重现此次的快照。
+commit 时，先计算每个子目录的校验和，然后在Git仓库中，这些校验和保存为树对象。之后，Git创建一个提交对象，该对象包含前面所述信息，还包含指向这个树对象的指针。然后，Git就可以在需要时重现此次的快照。
 
 现在，Git仓库中有五个对象：三个blob对象（保存文件快照）、一个树对象（记录目录结构和blob对象索引）以及一个提交对象（包含指向前述树对象的指针和所有提交信息）
 
 ![1629302413401](./图片笔记/1629302413401-3881234.png)
 
-提交后，再次修改，再次提交。这次的提交对象会包含指向上次提交对象（父对象）的指针。
+提交后，再次修改，再次提交。当前提交对象会包含指向上次提交对象（父对象）的指针。
 
 ![1629603517804](./图片笔记/1629603517804.png)
 
-Git分支本质：指向提交对象的可变指针。 Git默认分支：master。多次提交后，会有指向最后那个提交对象的master分支，它会在每次的提交操作中自动向前移动。
+分支本质：指向提交对象的可变指针。 Git默认分支：master。多次提交后，会有指向最后那个提交对象的master分支，它会在每次的提交操作中自动向前移动。
 
 master分支与其他分支完全相同，不是一个特殊的分支。 该分支是git init命令创建的，大多数人懒得更改而已。
 
@@ -37,17 +35,17 @@ master分支与其他分支完全相同，不是一个特殊的分支。 该分�
 
 #### 创建分支：git branch 
 
-Git创建分支，只是创建了可以移动的新的指针。
+本质：创建新的移动指针。
 
 ```
 git branch testing
 ```
 
-该命令创建了testing分支，会在当前所在提交对象上创建新指针。 
+结果：创建 testing 分支，即在当前所在的提交对象上创建新指针。 
 
 ![1629621887706](./图片笔记/1629621887706.png)
 
-如何确定当前分支是哪个？ Git具有特殊的HEAD指针，指向当前所在的本地分支（即HEAD是当前本地分支的别名？） git branch 仅创建一个分支，不会自动切换分支。
+特殊的HEAD指针，指向当前所在的本地分支（即HEAD是当前本地分支的别名？） git branch 仅创建一个分支，不会自动切换分支。
 
 ![1629623280871](./图片笔记/1629623280871.png)
 
@@ -81,7 +79,7 @@ $ git commit -a -m 'made a change'
 
 ![1629628235361](./图片笔记/1629628235361.png)
 
-testing分支向前移动了，但是master分支没有移动，依旧指向运行git checkout时指向的对象。切换回master分支。
+testing分支向前移动了，但是master分支没有移动，依旧指向 git checkout 时指向的对象。切换回 master 分支。
 
 ```
 $ git checkout master
@@ -89,7 +87,7 @@ $ git checkout master
 
 ![1629628796243](./图片笔记/1629628796243.png)
 
-该命令做了两件事，一：使HEAD指回master分支；二：将工作目录恢复成master分支指向的快照。
+该命令做了两件事，一：使 HEAD 指回master分支；二：将工作目录恢复成master分支指向的快照。
 
 注意：切换分支时，工作目录里的文件会被改变。切换到较旧的分支时，工作目录会恢复到该分支最后一次提交的样子。如果不能恢复，则禁止切换分支。
 
@@ -118,13 +116,13 @@ $ git log --oneline --decorate --graph --all
 
 ### 分支的新建与合并
 
-#### 新建分支
+#### 新建分支：git branch [branch-name]    git checkout -b [branch-name] 新建并切换
 
-首先，假设在项目上工作，并有一些提交。
+假设在该项目上有一些提交。
 
 ![1629907115680](./图片笔记/1629907115680.png)
 
-为了解决某个问题，新建一个分支，新建的同时切换到该分支上工作。
+新建一个分支解决某个问题。新建的同时切换到该分支上工作。
 
 ```
 $ git checkout -b iss53
@@ -182,16 +180,19 @@ Fast-forward
 注意fast-forward这个词。由于master分支是该分支的直接上游，因此git只是简单移动指针。
 
 ![1629993774821](./图片笔记/1629993774821.png)
-该紧急问题被解决后,需要回到之前的工作中去.首先,删除hotfix分支，master分支已经合并了，不需要该分支了。
+
+#### 删除分支：git branch -d [branch-name]
+
+该紧急问题被解决后,需要回到之前的工作中去.首先,删除hotfix分支，master 分支已经合并了，不需要该分支了。
 
 ```
 $ git branch -d hotfix
 Deleted branch hotfix (3a0874c).
 ```
 
-#### 分支的合并：git merge
+#### 分支的合并：git merge [branch-name]
 
-假设iss53上的分支已经修复，需要将iss53分支合并到master分支。首先，切换到master分支，再运行git merge命令。
+将 iss53 分支合并到 master 分支。切换到 master 分支，再运行 git merge 命令。
 
 ```
 $ git checkout master
@@ -202,7 +203,7 @@ index.html |    1 +
 1 file changed, 1 insertion(+)
 ```
 
-这次与合并hotfix有些不同，这次是一个简单的三方合并。即两个分支没有共同的祖先，分别从两个分支的末端快照与一个共同祖先进行三方合并。
+这次与合并hotfix有些不同，这次是一个简单的三方合并。即两个分支没有共同的祖先（或者说，没有直接的共同祖先？），分别从两个分支的末端快照与一个共同祖先进行三方合并。
 
 ![1630509427644](./图片笔记/1630509427644.png)
 
@@ -261,6 +262,8 @@ please contact us at email.support@github.com
 
 ### 分支管理
 
+##### 查看所有分支： git branch
+
 不带参数的git branch。得到当前所有分支列表。
 
 ```
@@ -269,6 +272,8 @@ $ git branch
 * master
   testing
 ```
+
+##### 查看每个分支的最后一次提交：git branch -v
 
 分支前的*字符，代表现在检出的分支。（现在所在的分支）如果需要查看每个分支的最后一次提交，可以使用git branch -v。
 
@@ -279,6 +284,8 @@ $ git branch -v
   testing 782fd34 add scott to the author list in the readmes
 ```
 
+##### 查看已合并到当前分支的分支： git branch --merged
+
 查看已经合并到当前分支的分支。git branch --merged。
 
 ```
@@ -287,6 +294,8 @@ $ git branch --merged
 * master
 ```
 
+##### 查看未合并到当前分支的分支：git branch --no-merged
+
 查看未合并到当前分支的分支列表。git branch --no-merged。
 
 ```
@@ -294,7 +303,7 @@ $ git branch --no-merged
   testing
 ```
 
-这个列表中的分支使用git branch -d删除时，会提示未merged，即删除失败。可以使用git branch -D强制删除。
+##### 这个列表中的分支使用git branch -d删除时，会提示未merged，即删除失败。可以使用git branch -D强制删除。
 
 ### 分支开发工作流
 
@@ -334,23 +343,27 @@ Git使用简单的三方合并，所以反复将一个分支合并入另一个�
 
 ![1632557339665](./图片笔记/1632557339665.png)
 
+#### 同步远程仓库内容到本地： git fetch origin
+
 如果需要同步工作，运行git fetch origin命令。该命令查找origin是哪个服务器，从中抓取本地没有的数据，并且更新本地数据库，移动origin/master指针指向新的、更新后的位置。
 
 ![1632557414063](./图片笔记/1632557414063.png)
 
-演示多个远程仓库与远程分支的情况。假设有另一个内部Git服务器，该服务器位于git.team1.ourcompany.com。可以运行git remote add 添加一个新的远程仓库引用到当前的项目。将该仓库命名为teamone，作为整个URL的缩写。
+#### 添加新的远程仓库引用： git remote add [name url]
+
+多个远程仓库与远程分支的情况。假设有另一个内部Git服务器，该服务器位于git.team1.ourcompany.com。可以运行git remote add 添加一个新的远程仓库引用到当前的项目。将该仓库命名为teamone，作为整个URL的缩写。
 
 ![1632557558413](./图片笔记/1632557558413.png)
 
-现在，可以运行git fetch teamone抓取远程仓库teamone有而本地没有的数据。但是，那台服务器上现有的数据是origin服务器上的一个子集，所以Git并不会抓取数据而是设置远程跟踪分支teamone/master指向teamone的master分支。
+现在，可以运行git fetch teamone抓取远程仓库teamone有而本地没有的数据。但是，那台服务器上现有的数据是origin服务器上的一个子集，所以Git并不会抓取数据而是设置远程跟踪分支 teamone/maste r指向 teamone 的 master 分支。
 
 ![1632557623869](./图片笔记/1632557623869.png)
 
-#### 推送
+#### 推送: git  push repo-name branch-name
 
 公开分享一个分支，即将其推送到有写入权限的远程仓库上。本地分支并不会自动与远程仓库同步，必须显示地推送想要分享的分支。可以把不愿意分享的内容放到私人分支上，将需要协作的内容推送到公开分支上。
 
-例如共同在serverfix 分支上工作。可以运行 git push (remote) (branch) 命令推送分支。
+例如共同在 serverfix  分支上工作。可以运行 git push (remote) (branch) 命令推送分支。
 
 ```
 $ git push origin serverfix
@@ -363,7 +376,7 @@ To https://github.com/schacon/simplegit
  * [new branch]      serverfix -> serverfix
 ```
 
-这里的工作被简化了。 Git自动将serverfix分支名字展开为 refs/heads/serverfix:refs/heads/serverfix 。即，推送本地的serverfix分支来更新远程仓库上的serverfix分支。  可以运行git push origin serverfix命令得到同样的效果。即也是推送本地的serverfix 分支，作为远程仓库的serverfix分支。 可以通过这种方式 将本地分支推送到一个命名不相同的远程分支。也可以更改远程分支名， 即 git push origin serverfix:awesomebranch 将本地的serverfix分支推送到远程的 awesomebranch 分支。
+Git 自动将 serverfix 分支名字展开为 refs/heads/serverfix:refs/heads/serverfix 。即，推送本地的 serverfix 分支来更新远程仓库上的serverfix 分支。  可以运行 git push origin serverfix :serverfix 命令得到同样的效果。即也是推送本地的serverfix 分支，作为远程仓库的serverfix分支。 可以通过这种方式 将本地分支推送到一个命名不相同的远程分支。也可以更改远程分支名， 即 git push origin serverfix:awesomebranch 将本地的serverfix分支推送到远程的 awesomebranch 分支。
 
 下一次其他协作者从服务器上抓取数据时，会在本地生成一个远程跟踪分支origin/serverfix，指向服务器的serverfix分支的引用。
 
@@ -377,9 +390,11 @@ From https://github.com/schacon/simplegit
  * [new branch]      serverfix    -> origin/serverfix
 ```
 
-注意：抓取到的新的远程跟踪分支时，本地不会自动生成一份可编辑的副本（拷贝）。即在这种情况下，不会有一个新的serverfix分支，只有一个不可以修改的origin/serverfix指针。
+注意：抓取到的新的远程跟踪分支时，本地不会自动生成一份可编辑的副本（拷贝）。即在这种情况下，不会有一个新的 serverfix 本地分支，只有一个不可以修改的 origin/serverfix 指针（即远程分支引用）。
 
 可以运行 git merge origin/serverfix 将这些工作合并到当前所在的分支。如果想要在自己的serverfix分支工作，可以将该分支建立在远程跟踪分支上。
+
+#### 创建起点位于远程跟踪分支的本地分支： git checkout -b serverfix origin/serverfix
 
 ```
 $ git checkout -b serverfix origin/serverfix
@@ -387,19 +402,94 @@ Branch serverfix set up to track remote branch serverfix from origin.
 Switched to a new branch 'serverfix'
 ```
 
-这样后，就创建了一个用于工作的本地分支，并且起点位于origin/serverfix。
+这样后，就创建了一个用于工作的本地分支，并且起点位于 origin/serverfix 。
 
-#### 跟踪分支 
+#### 跟踪分支 : 与远程分支有直接关系的本地分支。
 
 从一个远程跟踪分支检出一个本地分支会自动创建一个跟踪分支（或者称为上游分支）。跟踪分支是与远程分支有直接关系的本地分支。若在跟踪分支上使用git pull命令，Git能自动识别去哪个服务器抓取、合并到哪个分支。
 
-克隆一个仓库时，通常自动创建一个跟踪origin/master的master分支。可以自己设置其他的跟踪分支-其他远程仓库上的跟踪分支，或者不跟踪master分支。可以运行git checkout -b [branch] [remotename]/[branch]来设置跟踪分支。
+克隆一个仓库时，通常自动创建一个跟踪origin/master的master分支。可以自己设置其他的跟踪分支-其他远程仓库上的跟踪分支，或者不跟踪master分支。
+
+##### 运行git checkout -b [branch] [remotename]/[branch]来设置跟踪分支。
 
 Git提供了快捷方式。
+
+##### 快捷方式： git checkout --track origin/serverfix
 
 ```
 $ git checkout --track origin/serverfix
 Branch serverfix set up to track remote branch serverfix from origin.
 Switched to a new branch 'serverfix'
 ```
+
+##### 重命名：git checkout -b  [newname] [remotename]/[branch]
+
+将本地分支与远程分支设置为不同的名字。
+
+```
+$ git checkout -b sf origin/serverfix
+Branch sf set up to track remote branch serverfix from origin.
+Switched to a new branch 'sf'
+```
+
+##### 设置（或修改）本地分支跟踪远程分支：git branch -u [remote]/[branch]
+
+```
+$ git branch -u origin/serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+```
+
+note: 
+
+上游快捷方式
+
+当设置好跟踪分支后，可以通过 `@{upstream}` 或 `@{u}` 快捷方式来引用它。 所以在 `master` 分支时并且它正在跟踪 `origin/master` 时，如果愿意的话可以使用 `git merge @{u}` 来取代 `git merge origin/master`
+
+##### 查看设置的所有跟踪分支： git branch -vv
+
+该命令将本地所有分支列出来。
+
+```
+$ git branch -vv
+  iss53     7e424c3 [origin/iss53: ahead 2] forgot the brackets
+  master    1ae2a45 [origin/master] deploying index fix
+* serverfix f8674d9 [teamone/server-fix-good: ahead 3, behind 1] this should do it
+  testing   5ea463a trying something new
+```
+
+`iss53` 分支正在跟踪 `origin/iss53` 并且 “ahead” 是 2，本地有两个提交还没有推送到服务器上。
+
+`master` 分支正在跟踪 `origin/master` 分支并且是最新的。
+
+`serverfix` 分支正在跟踪 `teamone` 服务器上的 `server-fix-good` 分支并且领先 2 落后 1，即服务器上有一次提交还没有合并，同时本地有三次提交还没有推送。
+
+`testing` 分支并没有跟踪任何远程分支。
+
+注意：这些数字的值来自于从每个服务器上最后一次抓取的数据。 该命令没有连接服务器，只会告诉你关于本地缓存的服务器数据。
+
+要获得最新的数据，需要在运行此命令前抓取所有的远程仓库。 即：git fetch --all; git branch -vv
+
+#### 拉取
+
+##### git fetch 
+
+git fetch 从服务器抓取本地没有的数据。不会修改工作目录中的内容，需要手动合并。
+
+##### git pull
+
+git pull 从服务器抓取本地没有的数据，并尝试自动合并远程分支。（ 即 git fetch + git merge ？）
+
+#### 删除远程分支：git push origin  --delete  [branch]
+
+例子：
+
+```
+$ git push origin --delete serverfix
+To https://github.com/schacon/simplegit
+ - [deleted]         serverfix
+```
+
+该命令表示从服务器移除这个指针。
+
+但是 Git 服务器通常会保留数据一段时间，直到垃圾回收运行。
 
